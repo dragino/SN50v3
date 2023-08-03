@@ -27,7 +27,7 @@ void POWER_IoInit(void)
 {
 	POWER_CLK_ENABLE();
 	gpio_set_iomux(POWER_PORT, POWER_5V_PIN, 0);
-	gpio_init(POWER_PORT, POWER_5V_PIN, GPIO_MODE_OUTPUT_OD_LOW);
+	gpio_init(POWER_PORT, POWER_5V_PIN, GPIO_MODE_OUTPUT_PP_LOW);
 	delay_ms(20);  
 }
 
@@ -35,7 +35,7 @@ void POWER_IoDeInit(void)
 {
 	POWER_CLK_ENABLE();
 	gpio_set_iomux(POWER_PORT, POWER_5V_PIN, 0);
-	gpio_init(POWER_PORT, POWER_5V_PIN,GPIO_MODE_OUTPUT_OD_HIZ);
+	gpio_init(POWER_PORT, POWER_5V_PIN,GPIO_MODE_OUTPUT_PP_HIGH);
 }
 
 void GPIO_EXTI4_IoInit(uint8_t state)
