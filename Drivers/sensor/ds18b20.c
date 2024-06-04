@@ -89,17 +89,17 @@ void DS18B20_Mode_Out_PP(uint8_t num)
 	if(num==1)
 	{	
 		DOUT1_CLK_ENABLE();
-		gpio_init(DOUT1_PORT, DOUT1_PIN, GPIO_MODE_OUTPUT_PP_HIGH);	
+		gpio_init(DOUT1_PORT, DOUT1_PIN, GPIO_MODE_OUTPUT_PP_LOW);	
   }
 	else if(num==2)
 	{	
 		DOUT2_CLK_ENABLE();
-		gpio_init(DOUT2_PORT, DOUT2_PIN, GPIO_MODE_OUTPUT_PP_HIGH);	 
+		gpio_init(DOUT2_PORT, DOUT2_PIN, GPIO_MODE_OUTPUT_PP_LOW);	 
   }
 	else if(num==3)
 	{	
 		DOUT3_CLK_ENABLE();
-		gpio_init(DOUT3_PORT, DOUT3_PIN, GPIO_MODE_OUTPUT_PP_HIGH);	  
+		gpio_init(DOUT3_PORT, DOUT3_PIN, GPIO_MODE_OUTPUT_PP_LOW);	  
   }	
 }
 

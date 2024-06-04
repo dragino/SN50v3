@@ -1,4 +1,4 @@
- /*
+/*
  / _____)             _              | |
 ( (____  _____ ____ _| |_ _____  ____| |__
  \____ \| ___ |    (_   _) ___ |/ ___)  _ \
@@ -6,18 +6,18 @@
 (______/|_____)_|_|_| \__)_____)\____)_| |_|
     (C)2013 Semtech
 
-Description: LoRaMac classA device implementation
+Description: contains all hardware driver
 
 License: Revised BSD License, see LICENSE.TXT file include in the project
 
-Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
+Maintainer: Miguel Luis and Gregory Cristian
 */
-/******************************************************************************
-  * @file    version.h
+ /******************************************************************************
+  * @file    TMP117_I2C.h
   * @author  MCD Application Team
-  * @version V1.1.4
-  * @date    08-January-2018
-  * @brief   defines the lora mac version
+  * @version V1.1.1
+  * @date    01-June-2017
+  * @brief   contains all hardware driver
   ******************************************************************************
   * @attention
   *
@@ -57,29 +57,52 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
 
-#ifndef __VERSION_H__
-#define __VERSION_H__
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __TMP117_I2C_H__
+#define __TMP117_I2C_H__
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-   
 /* Includes ------------------------------------------------------------------*/
-
-#define AT_VERSION_STRING	"v1.3"
-#define AT_LoRaWan_VERSION_STRING	"DR-LWS-007" 
-	 
 /* Exported types ------------------------------------------------------------*/
+#include <stdint.h>
+#include <stdbool.h> 
+/* Exported constants --------------------------------------------------------*/
 /* External variables --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */ 
+/**
+ * @brief  
+ *
+ * @note
+ * @retval None
+ */
+void TMP117_I2C_GPIO_MODE_Config(void);
+void TMP117_I2C_delay(void);
+void TMP117_I2C_Start(void);
+void TMP117_I2C_Stop(void);
+uint8_t TMP117_I2C_WaitAck(void);
+void TMP117_I2C_NAck(void);
+void TMP117_I2C_Ack(void);
+void TMP117_I2C_SendByte(uint8_t _ucByte);
+uint8_t TMP117_I2C_ReadByte(unsigned char ack);
+uint8_t TMP117_I2C_Read_Len(uint8_t addr,uint8_t reg,uint8_t len,uint8_t *buf);
+void TMP117_I2C_SDA_IN(void);
+void TMP117_I2C_SDA_OUT(void);
+uint8_t TMP117_I2C_Write_Byte(uint8_t addr,uint8_t data);
+uint8_t TMP117_I2C_Read_Byte(uint8_t addr);
+uint8_t TMP117_I2C_Write_Len(uint8_t addr,uint8_t reg,uint8_t len,uint8_t *buf);
+
+uint16_t TMP117_Set_Config(void);
+float get_tmp117_temp(void);
+void TMP117_soft_reset(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__VERSION_H__*/
+#endif /* __TMP117_I2C_H__ */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

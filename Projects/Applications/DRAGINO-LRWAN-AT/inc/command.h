@@ -75,6 +75,7 @@
 #define AT_WEIGAP     "+WEIGAP"
 #define AT_5VT        "+5VT"
 #define AT_SETCNT     "+SETCNT"
+#define AT_PWMSET     "+PWMSET"
 #define AT_SLEEP      "+SLEEP"
 #define AT_CFG        "+CFG"
 #define AT_UUID       "+UUID" 

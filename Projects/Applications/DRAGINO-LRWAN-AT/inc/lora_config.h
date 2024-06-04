@@ -21,6 +21,10 @@ extern "C" {
 #define ADC_BAT_OUTPUT_PORT       GPIOA                                                 
 #define ADC_BAT_OUTPUT_PIN        GPIO_PIN_12
 	
+#define ADC_SOLAR_LEVEL_PORT        GPIOA                                                 
+#define ADC_SOLAR_LEVEL_PIN         GPIO_PIN_5
+#define GPIO_SOLAR_BAT_CHANNEL      3
+
 /* ---------------------------  LED_pin definition -------------------------------*/
 #define LED_CLK_ENABLE()					rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOB, true)
 #define LED_RGB_PORT              GPIOB	
@@ -115,6 +119,15 @@ extern "C" {
 #define ULT_Echo_PORT             GPIOA
 #define ULT_Echo_PIN              GPIO_PIN_15
 
+/* ---------------------------  PWM  definition -------------------------------*/
+#define PWM_CLK_ENABLE()     		rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOA, true)
+#define PWM_RCC_ENABLE()     		rcc_enable_peripheral_clk(RCC_PERIPHERAL_TIMER1, true)
+#define PWM_RCC_DISABLE()     	rcc_enable_peripheral_clk(RCC_PERIPHERAL_TIMER1, false)
+#define TIMER_ENABLE()     			timer_cmd(TIMER1, true)
+#define TIMER_DISABLE()     		timer_cmd(TIMER1, false)
+#define PWM_PORT     						GPIOA
+#define PWM_PIN      						GPIO_PIN_15
+	
 /* ---------------------------  DX-BT24_pin definition -------------------------------*/
 #define DX_BT24_CLK_ENABLE()		rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOD, true)
 #define DX_BT24_PORT          	GPIOD	

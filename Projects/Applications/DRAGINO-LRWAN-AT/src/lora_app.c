@@ -109,13 +109,14 @@ product_id
 	#define Firm_FQ 255
 #endif
 
-uint8_t product_id=3;
+uint8_t product_id=0x1C;
 uint8_t fire_version=0;
 uint8_t current_fre_band=0;
 uint8_t product_id_read_in_flash=0;
 uint8_t fre_band_read_in_flash=0;
 uint8_t firmware_ver_read_in_flash=0;
 uint8_t workmode;
+uint8_t pwm_timer;
 uint16_t power_5v_time;
 char *band_string="";
 bool FDR_status=0;
@@ -460,9 +461,12 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
 		device_UUID_error_status=1;
 		LOG_PRINTF(LL_DEBUG,"Invalid credentials,the device goes into low power mode\r\n");
 	}
-	
+
+	#if defined LB_LS
+  LOG_PRINTF(LL_DEBUG,"\n\rDragino SN50_v3-LS Device\n\r");
+	#else	
 	LOG_PRINTF(LL_DEBUG,"\n\rDragino SN50_v3-LB Device\n\r");
-	
+	#endif
 	LOG_PRINTF(LL_DEBUG,"Image Version: "AT_VERSION_STRING"\n\r");
 	LOG_PRINTF(LL_DEBUG,"LoRaWan Stack: "AT_LoRaWan_VERSION_STRING"\n\r");	
 	LOG_PRINTF(LL_DEBUG,"Frequency Band: ");
@@ -1249,6 +1253,8 @@ void Flash_Store_Config(void)
 	store_config_in_flash[76]=(int)(GapValue*10)>>8;
 	store_config_in_flash[77]=(int)(GapValue*10);
 	
+	store_config_in_flash[78]=pwm_timer;
+	
 	__disable_irq();	
 	flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
 	delay_ms(5);	
@@ -1415,6 +1421,8 @@ void Flash_Read_Config(void)
   inmode3=read_config_in_flash[73];
 	
 	GapValue=(float)((read_config_in_flash[74]<<24 | read_config_in_flash[75]<<16 | read_config_in_flash[76]<<8 | read_config_in_flash[77])/10.0);
+	
+	pwm_timer=read_config_in_flash[78];;
 }
 
 uint8_t string_touint(void)

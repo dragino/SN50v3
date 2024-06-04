@@ -94,6 +94,8 @@ typedef struct{
 	float temp_sht;
 	
 	float hum_sht;
+
+	float temp_tmp117;
 	
 	uint16_t illuminance;	
 	
@@ -108,6 +110,10 @@ typedef struct{
 	uint32_t count_pa4;
 	
 	uint32_t count_pa8;
+	
+  uint16_t pwm_freq;
+	
+	uint16_t pwm_duty;
 	
   /**more may be added*/
 } sensor_t;
@@ -129,6 +135,7 @@ float DS18B20_Read(uint8_t temp,uint8_t message);
 uint16_t ADC_Read(uint8_t temp,uint8_t message);
 bool Digital_input_Read(uint8_t temp,uint8_t message);
 uint16_t battery_voltage_measurement(void);
+uint16_t middle_value(uint16_t value[]);
 /**
  * @brief  sensor  read. 
  *

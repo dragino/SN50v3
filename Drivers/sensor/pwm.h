@@ -1,4 +1,4 @@
- /*
+/*
  / _____)             _              | |
 ( (____  _____ ____ _| |_ _____  ____| |__
  \____ \| ___ |    (_   _) ___ |/ ___)  _ \
@@ -6,18 +6,18 @@
 (______/|_____)_|_|_| \__)_____)\____)_| |_|
     (C)2013 Semtech
 
-Description: LoRaMac classA device implementation
+Description: contains all hardware driver
 
 License: Revised BSD License, see LICENSE.TXT file include in the project
 
-Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
+Maintainer: Miguel Luis and Gregory Cristian
 */
-/******************************************************************************
-  * @file    version.h
+ /******************************************************************************
+  * @file    pwm.h
   * @author  MCD Application Team
-  * @version V1.1.4
-  * @date    08-January-2018
-  * @brief   defines the lora mac version
+  * @version V1.1.0
+  * @date    17-April-2019
+  * @brief   contains all hardware driver
   ******************************************************************************
   * @attention
   *
@@ -57,29 +57,35 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
 
-#ifndef __VERSION_H__
-#define __VERSION_H__
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __PWM_H
+#define __PWM_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-   
 /* Includes ------------------------------------------------------------------*/
-
-#define AT_VERSION_STRING	"v1.3"
-#define AT_LoRaWan_VERSION_STRING	"DR-LWS-007" 
-	 
 /* Exported types ------------------------------------------------------------*/
+
+/* Exported constants --------------------------------------------------------*/
 /* External variables --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */ 
+/**
+ * @brief  
+ *
+ * @note
+ * @retval None
+ */
 
+void gptimer_pwm_output(uint16_t time,uint32_t freq_hz,uint8_t duty);
+void gptimer_pwm_input_capture(uint8_t pwmmd);
+void gptimer_pwm_Iodeinit(void);
+	 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__VERSION_H__*/
+#endif
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

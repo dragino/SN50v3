@@ -25,6 +25,7 @@
 #include "tremo_iwdg.h"
 #include "bsp.h"
 #include "weight.h"
+#include "pwm.h"
 
 #define ARGC_LIMIT 16
 #define ATCMD_SIZE (242 * 2 + 18)
@@ -96,6 +97,7 @@ extern uint8_t inmode,inmode2,inmode3;
 extern uint8_t workmode;
 extern uint32_t count1,count2;
 extern float GapValue;
+extern uint8_t pwm_timer;
 extern bool joined_finish;
 		
 extern bool FDR_status;
@@ -178,6 +180,7 @@ static int at_weigre_func(int opt, int argc, char *argv[]);
 static int at_weigap_func(int opt, int argc, char *argv[]);
 static int at_5vtime_func(int opt, int argc, char *argv[]);
 static int at_setcount_func(int opt, int argc, char *argv[]);
+static int at_pwmset_func(int opt, int argc, char *argv[]);
 static int at_sleep_func(int opt, int argc, char *argv[]);
 static int at_cfg_func(int opt, int argc, char *argv[]);
 static int at_uuid_func(int opt, int argc, char *argv[]);
@@ -245,6 +248,7 @@ static at_cmd_t g_at_table[] = {
     {AT_WEIGAP, at_weigap_func},		
 		{AT_5VT, at_5vtime_func},	
 		{AT_SETCNT, at_setcount_func},
+		{AT_PWMSET, at_pwmset_func},
 		{AT_SLEEP, at_sleep_func},		
 		{AT_CFG, at_cfg_func},		
 		{AT_UUID, at_uuid_func},		
@@ -2541,7 +2545,7 @@ static int at_mod_func(int opt, int argc, char *argv[])
         
             value = strtol((const char *)argv[0], NULL, 0);
 					
-					  if((value>=1)&&(value<=9))
+					  if((value>=1)&&(value<=11))
 						{
 							workmode=value;		
               LOG_PRINTF(LL_DEBUG,"Attention:Take effect after ATZ\r\n");							
@@ -2551,7 +2555,7 @@ static int at_mod_func(int opt, int argc, char *argv[])
             }
 						else
 						{
-							LOG_PRINTF(LL_DEBUG,"Mode of range is 1 to 9\r\n");		
+							LOG_PRINTF(LL_DEBUG,"Mode of range is 1 to 11\r\n");		
 							ret = LWAN_PARAM_ERROR;
 						}
             break;
@@ -2848,6 +2852,49 @@ static int at_setcount_func(int opt, int argc, char *argv[])
     return ret;				
 }
 
+static int at_pwmset_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t temp=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", pwm_timer);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+        
+            temp = strtol((const char *)argv[0], NULL, 0);
+					
+					  if(temp<=1)
+						{
+							pwm_timer=temp;					
+							ret = LWAN_SUCCESS;
+							write_config_in_flash_status=1;
+							atcmd[0] = '\0';
+            }
+						else
+						{
+							ret = LWAN_PARAM_ERROR;
+						}
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or Set the counting unit of the timer(0:1 microsecond,1:1 millisecond)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;			
+}
+
 static int at_sleep_func(int opt, int argc, char *argv[])
 {
 	  int ret = LWAN_PARAM_ERROR; 
@@ -2889,6 +2936,10 @@ static int at_sleep_func(int opt, int argc, char *argv[])
 					gpio_config_stop3_wakeup(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN ,false,GPIO_LEVEL_HIGH);	
 					gpio_init(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN, GPIO_MODE_ANALOG);
 					gpio_config_stop3_wakeup(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN ,false,GPIO_LEVEL_HIGH);	
+					if(workmode==10)
+					{
+						gptimer_pwm_Iodeinit();
+					}					
 					joined_finish=0;
 					sleep_status=1;
 					

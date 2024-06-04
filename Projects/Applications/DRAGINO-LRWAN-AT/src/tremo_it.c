@@ -4,8 +4,12 @@
 #include "lora_config.h"
 #include "tremo_uart.h"
 #include "tfsensor.h"
+#include "tremo_timer.h"
 
+uint16_t IC1[4],IC2[4];
+uint16_t IC1Value=0,IC2Value=0;
 uint8_t RxBuffer[1];
+extern uint8_t icnumber;
 extern bool exti_flag,exti2_flag,exti3_flag;
 extern uint8_t user_key_exti_flag;
 extern bool join_network;
@@ -172,6 +176,23 @@ void DMA1_IRQHandler(void)
     dma1_IRQHandler();
 }
 
+void TIMER1_IRQHandler(void)
+{
+  bool state;
+  timer_get_status(TIMER1, TIMER_SR_CC0IF, &state);
+  if (state) 
+	{
+    timer_clear_status(TIMER1, TIMER_SR_CC0IF);	  		
+		IC1Value = TIMER1->CCR0;
+		IC2Value = TIMER1->CCR1;
+		if(icnumber<4)
+		{
+			IC1[icnumber]=IC1Value;
+			IC2[icnumber]=IC2Value;
+			icnumber++;
+		}
+  }
+}
 /******************************************************************************/
 /*                 Tremo Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

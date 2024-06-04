@@ -14,6 +14,8 @@
 #include "weight.h"
 #include "tfsensor.h"
 #include "ult.h"
+#include "pwm.h"
+#include "TMP117_I2C.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -27,6 +29,8 @@
 
 #define VBAT_FACTOR     3.06f
 
+bool tmp117_connect_status;
+uint8_t icnumber=0;
 bool bh1750flags=0;
 uint8_t mode2_flag=0;
 static uint8_t flags=0;
@@ -34,6 +38,9 @@ extern uint8_t workmode;
 extern uint8_t inmode,inmode2,inmode3;
 extern uint16_t power_5v_time;
 extern uint32_t count1,count2;
+extern uint8_t pwm_timer;
+extern uint16_t IC1[4],IC2[4];
+static float tmp117_temp_record=10;
 
 void BLE_power_Init(void)
 {
@@ -164,6 +171,16 @@ void BSP_sensor_Init( void  )
 		 GPIO_EXTI4_IoInit(inmode2);
 		 GPIO_EXTI15_IoInit(inmode3);		 
 	 }	
+	 else if(workmode==11)
+	 {
+		TMP117_I2C_GPIO_MODE_Config();
+		get_tmp117_temp();		 
+		if(tmp117_connect_status==1)
+		{
+			LOG_PRINTF(LL_DEBUG,"\n\rUse Sensor is TMP117\r\n");	
+			delay_ms(30);		
+		}			
+	 }
 	 
 	 if((workmode!=3)||(workmode!=8))
 	 {
@@ -317,7 +334,7 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
     sensor_data->count_pa8=count1;
 		if(message==1)
 		{	
-			LOG_PRINTF(LL_DEBUG,"PA8 count:%u\r\n",(unsigned int)count1);
+			LOG_PRINTF(LL_DEBUG,"PA8_count:%u\r\n",(unsigned int)count1);
 			delay_ms(20);
 		}      		
 	}
@@ -352,18 +369,112 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
     sensor_data->count_pa8=count1;		
 		if(message==1)
 		{	
-			LOG_PRINTF(LL_DEBUG,"PA8 count:%u\r\n",(unsigned int)count1);
-			LOG_PRINTF(LL_DEBUG,"PA4 count:%u\r\n",(unsigned int)count2);
+			LOG_PRINTF(LL_DEBUG,"PA8_count:%u\r\n",(unsigned int)count1);
+			LOG_PRINTF(LL_DEBUG,"PA4_count:%u\r\n",(unsigned int)count2);
 			delay_ms(40);
 		}     		
 	}	
+	else if(workmode==10)
+	{
+		sensor_data->temp1=DS18B20_Read(1,message);
+		POWER_open_time(power_5v_time);		
+		sensor_data->ADC_4=ADC_Read(1,message);
+		sensor_data->in1=Digital_input_Read(3,message);
+		sensor_data->exit_pa8=Digital_input_Read(2,message);	
+		
+    icnumber=0;
+    for(uint8_t y=0;y<4;y++)
+		{
+			IC1[y]=0;
+			IC2[y]=0;
+		}		
+	  gptimer_pwm_input_capture(pwm_timer);
+		if(pwm_timer==0)
+		{
+			delay_ms(500);
+		}
+		else
+		{
+			delay_ms(1500);
+		}
+		gptimer_pwm_Iodeinit();		
+		
+		if(middle_value(IC1)!=0)
+		{
+			sensor_data->pwm_freq = middle_value(IC1)+1;	
+		}	
+    else
+		{			
+      sensor_data->pwm_freq = 0;	
+		}
+
+		if(middle_value(IC2)!=0)
+		{
+			sensor_data->pwm_duty = middle_value(IC2)+1;
+		}
+		else
+		{
+			sensor_data->pwm_duty = 0;
+		}
+		
+		if(message==1)
+		{	
+			if(pwm_timer==0)
+			{
+				LOG_PRINTF(LL_DEBUG,"PWM_pulse_period: %d us\r\n",sensor_data->pwm_freq);
+				LOG_PRINTF(LL_DEBUG,"PWM_high_level_time: %d us\r\n",sensor_data->pwm_duty);
+			}
+			else
+			{
+				LOG_PRINTF(LL_DEBUG,"PWM_pulse_period: %d ms\r\n",sensor_data->pwm_freq);
+				LOG_PRINTF(LL_DEBUG,"PWM_high_level_time: %d ms\r\n",sensor_data->pwm_duty);				
+			}
+			delay_ms(40);
+		} 		
+	}
+  else if(mod_temp==11)
+	{
+		sensor_data->temp1=DS18B20_Read(1,message);
+		TMP117_I2C_GPIO_MODE_Config();
+		sensor_data->temp_tmp117=get_tmp117_temp();
+		
+		if(sensor_data->temp_tmp117-tmp117_temp_record>20 || sensor_data->temp_tmp117-tmp117_temp_record<-20)
+		{
+			TMP117_soft_reset();
+			sensor_data->temp_tmp117=get_tmp117_temp();
+		}
+		
+		if(sensor_data->temp_tmp117!=327.67)
+		{
+			tmp117_temp_record=sensor_data->temp_tmp117;
+		}
+	
+		if(message==1)
+		{		
+			if(sensor_data->temp_tmp117!=327.67)
+			{			
+				LOG_PRINTF(LL_DEBUG,"TMP117_temp=%.2f\n\r",sensor_data->temp_tmp117);
+			}
+			else
+			{
+				LOG_PRINTF(LL_DEBUG,"TMP117_temp=NULL\n\r");				
+			}
+		}		
+		POWER_open_time(power_5v_time);
+		sensor_data->ADC_4=ADC_Read(1,message);
+		sensor_data->in1=Digital_input_Read(3,message);
+		sensor_data->exit_pa8=Digital_input_Read(2,message);		
+	}		
   POWER_IoDeInit();	
 }
 
 uint16_t battery_voltage_measurement(void)
 {
 	uint16_t bat_mv;
-	
+
+	#if defined LB_LS
+  bat_mv=6*adc_in1_measurement(ADC_SOLAR_LEVEL_PORT,ADC_SOLAR_LEVEL_PIN,GPIO_SOLAR_BAT_CHANNEL);	
+	#else
 	gpio_set_iomux(ADC_BAT_OUTPUT_PORT, ADC_BAT_OUTPUT_PIN, 0);
 	gpio_init(ADC_BAT_OUTPUT_PORT, ADC_BAT_OUTPUT_PIN, GPIO_MODE_OUTPUT_PP_LOW);	
 	
@@ -373,7 +484,7 @@ uint16_t battery_voltage_measurement(void)
 	
 	gpio_set_iomux(ADC_BAT_OUTPUT_PORT, ADC_BAT_OUTPUT_PIN, 0);
 	gpio_init(ADC_BAT_OUTPUT_PORT, ADC_BAT_OUTPUT_PIN, GPIO_MODE_ANALOG);	
-	
+	#endif		
 	return bat_mv;
 }
 
@@ -498,5 +609,36 @@ bool Digital_input_Read(uint8_t temp,uint8_t message)
 		}			
 	}	
   return pin_status;	
+}
+
+uint16_t middle_value(uint16_t value[])
+{
+	uint16_t a,b,c,temp;
+	a = value[1];
+	b = value[2];
+	c = value[3];
+	
+  if (a > b)
+  {
+    temp = a;
+    a = b;
+    b = temp;
+  }
+	
+  if (a > c)
+  {
+    temp = a;
+    a = c;
+    c = temp;
+  }
+	
+  if (b > c)
+  {
+    temp = b;
+    b = c;
+    c = temp;
+  }
+	
+	return b;
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

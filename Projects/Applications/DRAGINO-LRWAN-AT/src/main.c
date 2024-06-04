@@ -25,6 +25,7 @@
 #include "lora_config.h"
 #include "LoRaMac.h"
 #include "weight.h"
+#include "pwm.h"
 
 #define BCD_TO_HEX2(bcd) ((((bcd)>>4)*10)+((bcd)&0x0F))
 #define LORAWAN_ADR_STATE LORAWAN_ADR_ON
@@ -105,6 +106,7 @@ uint8_t LinkADR_NbTrans_retransmission_nbtrials=0;
 uint8_t unconfirmed_uplink_change_to_confirmed_uplink_status=0;
 uint16_t unconfirmed_uplink_change_to_confirmed_uplink_timeout=0;
 
+extern uint8_t pwm_timer;
 extern uint8_t product_id;
 extern uint8_t fire_version;
 extern uint8_t current_fre_band;
@@ -895,6 +897,43 @@ static void Send( void )
 		AppData.Buff[i++] = (uint8_t)((bsp_sensor_data_buff.count_pa4)>>8);
 		AppData.Buff[i++] =	(uint8_t)(bsp_sensor_data_buff.count_pa4); 	
 	}
+  else if(workmode==10)
+	{		
+		AppData.Buff[i++] =(bsp_sensor_data_buff.bat_mv>>8);       
+		AppData.Buff[i++] = bsp_sensor_data_buff.bat_mv & 0xFF;
+	
+		AppData.Buff[i++]=(int)(bsp_sensor_data_buff.temp1*10)>>8;     
+		AppData.Buff[i++]=(int)(bsp_sensor_data_buff.temp1*10);
+	
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.ADC_4)>>8;          
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.ADC_4);
+
+		AppData.Buff[i++]=(bsp_sensor_data_buff.exit_pa8<<7)|0x24|((pwm_timer&0x01)<<1)|(exit_temp&0x01);
+	
+		AppData.Buff[i++]= (bsp_sensor_data_buff.pwm_freq)>>8;
+		AppData.Buff[i++]=  bsp_sensor_data_buff.pwm_freq;
+		
+		AppData.Buff[i++]= (bsp_sensor_data_buff.pwm_duty)>>8;
+		AppData.Buff[i++]=  bsp_sensor_data_buff.pwm_duty;
+	}
+  else if(workmode==11)
+	{		
+		AppData.Buff[i++] =(bsp_sensor_data_buff.bat_mv>>8);       
+		AppData.Buff[i++] = bsp_sensor_data_buff.bat_mv & 0xFF;
+	
+		AppData.Buff[i++]=(int)(bsp_sensor_data_buff.temp1*10)>>8;     
+		AppData.Buff[i++]=(int)(bsp_sensor_data_buff.temp1*10);
+	
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.ADC_4)>>8;          
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.ADC_4);
+
+		AppData.Buff[i++]=(bsp_sensor_data_buff.exit_pa8<<7)|0x28|(bsp_sensor_data_buff.in1<<1)|(exit_temp&0x01);
+	
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.temp_tmp117*100)>>8;      
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.temp_tmp117*100);
+		AppData.Buff[i++] = 0x00;   
+		AppData.Buff[i++] = 0x00; 
+	}
 	
   AppData.BuffSize = i;
 	payloadlens=i;
@@ -1246,13 +1285,43 @@ static void LORA_RxData( lora_AppData_t *AppData )
 		{
 			if( AppData->BuffSize == 2 )         
 			{	
-				if((AppData->Buff[1]>=0x01)&&(AppData->Buff[1]<=0x09))    //---->AT+MOD
+				if((AppData->Buff[1]>=0x01)&&(AppData->Buff[1]<=0x0B))    //---->AT+MOD
 				{
 					workmode=AppData->Buff[1];
 					downlink_config_store_in_flash=1;
 					atz_flags=1;						
 					rxpr_flags=1;	
 				}						 
+			}				
+			break;
+		}
+
+		case 0x0B:
+		{
+			if(workmode==10)      
+			{	
+				if(AppData->BuffSize == 7)
+				{
+					uint32_t frq = AppData->Buff[1]<<16 | AppData->Buff[2]<<8 | AppData->Buff[3];
+					uint8_t dct  = AppData->Buff[4];
+					uint16_t delay_time = AppData->Buff[5]<<8 | AppData->Buff[6];
+					if(frq!=0)    
+					{		
+						gptimer_pwm_output(delay_time,frq,dct);
+						rxpr_flags=1;	
+					}	
+				}				
+			}				
+			break;
+		}
+		
+		case 0x0C:
+		{
+			if( AppData->BuffSize == 2 )      //AT+PWMSET
+			{		
+				pwm_timer= AppData->Buff[1];
+				downlink_config_store_in_flash=1;
+				rxpr_flags=1;
 			}				
 			break;
 		}
@@ -1953,6 +2022,10 @@ void user_key_event(void)
 				gpio_config_stop3_wakeup(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN ,false,GPIO_LEVEL_HIGH);	
 				gpio_init(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN, GPIO_MODE_ANALOG);
 				gpio_config_stop3_wakeup(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN ,false,GPIO_LEVEL_HIGH);	
+				if(workmode==10)
+				{
+					gptimer_pwm_Iodeinit();
+				}
 				joined_finish=0;
 				user_key_duration=0;
 								
