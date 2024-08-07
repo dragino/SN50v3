@@ -66,6 +66,7 @@ Maintainer: Miguel Luis and Gregory Cristian
  extern "C" {
 #endif
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported constants --------------------------------------------------------*/
