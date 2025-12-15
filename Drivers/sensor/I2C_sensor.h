@@ -81,14 +81,6 @@ Maintainer: Miguel Luis and Gregory Cristian
  */
 	 
 #include "bsp.h"
-	 
-typedef struct{
-	
-	float temp_sht;
-	
-	float hum_sht;
-  /**more may be added*/
-} sht31_t;
 
 typedef struct{
 	
@@ -99,7 +91,7 @@ typedef struct{
 } sht20_t;
 
 uint8_t SHT31_CheckSum_CRC8(uint8_t* Result,uint8_t num);
-void SHT31_Read(sht31_t *sht31_data);
+void SHT31_Read(sht3x_data_t *sht3x_data);
 uint8_t check_sht31_connect(void);
 uint8_t SHT20_CheckSum_CRC8(uint8_t* Result);
 float SHT20_RH(void);

@@ -16,6 +16,7 @@
 #include "ult.h"
 #include "pwm.h"
 #include "TMP117_I2C.h"
+#include "sht3x.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -29,6 +30,8 @@
 
 #define VBAT_FACTOR     3.06f
 
+bool uplink_pin_status_pb15=0,uplink_pin_status_pa4=0,uplink_pin_status_pa8=0;
+uint16_t bat_record=3400;
 bool tmp117_connect_status;
 uint8_t icnumber=0;
 bool bh1750flags=0;
@@ -72,7 +75,7 @@ void BSP_sensor_Init( void  )
 	 GPIO_EXTI8_IoInit(0);		
 	 GPIO_EXTI15_IoInit(0);
 	
-	 if((workmode==1)||(workmode==3))
+	 if((workmode==1)||(workmode==3)||(workmode==12))
 	 {
 		 I2C_GPIO_MODE_Config();
 		 if(check_sht20_connect()==1)
@@ -182,7 +185,7 @@ void BSP_sensor_Init( void  )
 		}			
 	 }
 	 
-	 if((workmode!=3)||(workmode!=8))
+	 if((workmode!=3)&&(workmode!=8))
 	 {
 		GPIO_EXTI8_IoInit(inmode);	
 	 }
@@ -191,7 +194,8 @@ void BSP_sensor_Init( void  )
 	 {
 		 GPIO_EXTI15_IoInit(inmode3);
 	 }
-	 
+
+	 SHT3X_Init(0x44);	 
 	 POWER_IoDeInit();	
 	 GPIO_BLE_STATUS_Ioinit();
 	 
@@ -214,12 +218,31 @@ void BSP_sensor_Init( void  )
 
 void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 {		
+	delay_ms(50);
 	iwdg_reload();
   sensor_data->bat_mv=battery_voltage_measurement();
-  if(sensor_data->bat_mv>3750)
+  if((sensor_data->bat_mv>4300)||(sensor_data->bat_mv<2500)||(sensor_data->bat_mv-bat_record>200)||(bat_record-sensor_data->bat_mv>200))
 	{
 	  sensor_data->bat_mv=battery_voltage_measurement();
-	}	
+		
+		if((sensor_data->bat_mv>4300)||(sensor_data->bat_mv<2500))
+		{
+			if((sensor_data->bat_mv-bat_record>200)||(bat_record-sensor_data->bat_mv>200))
+			{
+				sensor_data->bat_mv=battery_voltage_measurement();
+				
+				if((sensor_data->bat_mv>4300)||(sensor_data->bat_mv<2500))
+				{
+					sensor_data->bat_mv=bat_record;					
+				}
+			}
+		}
+	}
+	
+	if((sensor_data->bat_mv<4300)&&(sensor_data->bat_mv>2500))
+	{
+		bat_record=sensor_data->bat_mv;
+	}
 
   if(message==1)
 	{				
@@ -229,20 +252,20 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 			
   if(mod_temp==1)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);
 		sensor_data->temp1=DS18B20_Read(1,message);
     I2C_read_data(sensor_data,flags,message);
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
-		sensor_data->in1=Digital_input_Read(3,message);
-		sensor_data->exit_pa8=Digital_input_Read(2,message);		
+		sensor_data->in1=Digital_input_Read(3,message);		
 	}	
 	else if(mod_temp==2)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);
 		sensor_data->temp1=DS18B20_Read(1,message);
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
-		sensor_data->in1=Digital_input_Read(3,message);	
-		sensor_data->exit_pa8=Digital_input_Read(2,message);	
+		sensor_data->in1=Digital_input_Read(3,message);		
 	  if(mode2_flag==1)
 		{
 			I2C_GPIO_MODE_Config();
@@ -288,32 +311,32 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 	}
 	else if(mod_temp==3)
 	{
+		sensor_data->exit_pb15=Digital_input_Read(3,message);
     I2C_read_data(sensor_data,flags,message);		
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
 		delay_ms(50);
 		sensor_data->ADC_5=ADC_Read(2,message);	
 		delay_ms(50);
-    sensor_data->ADC_8=ADC_Read(3,message);	
-		sensor_data->exit_pb15=Digital_input_Read(3,message);					
+    sensor_data->ADC_8=ADC_Read(3,message);					
 	}
 	else if(mod_temp==4)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);
 		sensor_data->temp1=DS18B20_Read(1,message);
 		sensor_data->temp2=DS18B20_Read(2,message);
 		sensor_data->temp3=DS18B20_Read(3,message);
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
-		sensor_data->in1=Digital_input_Read(3,message);			
-		sensor_data->exit_pa8=Digital_input_Read(2,message);				
+		sensor_data->in1=Digital_input_Read(3,message);							
 	}
 	else if(mod_temp==5)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);	
 		sensor_data->temp1=DS18B20_Read(1,message);
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
 		sensor_data->in1=Digital_input_Read(3,message);			
-		sensor_data->exit_pa8=Digital_input_Read(2,message);	
 		WEIGHT_SCK_Init();
 		WEIGHT_DOUT_Init();		 
 		sensor_data->Weight=Get_Weight();		
@@ -340,31 +363,31 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 	}
 	else if(mod_temp==7)
 	{
-		sensor_data->temp1=DS18B20_Read(1,message);
-		POWER_open_time(power_5v_time);
-		sensor_data->ADC_5=ADC_Read(2,message);
 		sensor_data->exit_pa4=Digital_input_Read(1,message);	
 		sensor_data->exit_pa8=Digital_input_Read(2,message);	
-		sensor_data->exit_pb15=Digital_input_Read(3,message);	
+		sensor_data->exit_pb15=Digital_input_Read(3,message);
+		sensor_data->temp1=DS18B20_Read(1,message);
+		POWER_open_time(power_5v_time);
+		sensor_data->ADC_5=ADC_Read(2,message);	
 	}
 	else if(mod_temp==8)
 	{
+    sensor_data->exit_pb15=Digital_input_Read(3,message);		
 		sensor_data->temp1=DS18B20_Read(1,message);
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
 		delay_ms(50);
 		sensor_data->ADC_5=ADC_Read(2,message);
 		delay_ms(50);		
-    sensor_data->ADC_8=ADC_Read(3,message);		
-    sensor_data->exit_pb15=Digital_input_Read(3,message);				
+    sensor_data->ADC_8=ADC_Read(3,message);				
 	}
 	else if(mod_temp==9)
 	{
+		sensor_data->exit_pb15=Digital_input_Read(3,message);	
 		sensor_data->temp1=DS18B20_Read(1,message);
 		sensor_data->temp2=DS18B20_Read(2,message);
 		sensor_data->temp3=DS18B20_Read(3,message);
 		POWER_open_time(power_5v_time);
-		sensor_data->exit_pb15=Digital_input_Read(3,message);	
     sensor_data->count_pa4=count2;
     sensor_data->count_pa8=count1;		
 		if(message==1)
@@ -376,11 +399,11 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 	}	
 	else if(workmode==10)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);
 		sensor_data->temp1=DS18B20_Read(1,message);
 		POWER_open_time(power_5v_time);		
 		sensor_data->ADC_4=ADC_Read(1,message);
-		sensor_data->in1=Digital_input_Read(3,message);
-		sensor_data->exit_pa8=Digital_input_Read(2,message);	
+		sensor_data->in1=Digital_input_Read(3,message);	
 		
     icnumber=0;
     for(uint8_t y=0;y<4;y++)
@@ -434,6 +457,7 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 	}
   else if(mod_temp==11)
 	{
+		sensor_data->exit_pa8=Digital_input_Read(2,message);
 		sensor_data->temp1=DS18B20_Read(1,message);
 		TMP117_I2C_GPIO_MODE_Config();
 		sensor_data->temp_tmp117=get_tmp117_temp();
@@ -462,9 +486,20 @@ void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp)
 		}		
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_4=ADC_Read(1,message);
-		sensor_data->in1=Digital_input_Read(3,message);
-		sensor_data->exit_pa8=Digital_input_Read(2,message);		
+		sensor_data->in1=Digital_input_Read(3,message);		
 	}		
+	else if(mod_temp==12)
+	{
+    I2C_read_data(sensor_data,flags,message);
+		POWER_open_time(power_5v_time);	
+		sensor_data->in1=Digital_input_Read(3,message);	
+    sensor_data->count_pa8=count1;
+		if(message==1)
+		{	
+			LOG_PRINTF(LL_DEBUG,"PA8_count:%u\r\n",(unsigned int)count1);
+			delay_ms(20);
+		}   		
+	}
   POWER_IoDeInit();	
 }
 
@@ -588,7 +623,8 @@ bool Digital_input_Read(uint8_t temp,uint8_t message)
 		{				
 			LOG_PRINTF(LL_DEBUG,"PA4_status:%d\r\n",pin_status);
 			delay_ms(20);
-		}	
+		}
+		uplink_pin_status_pa4=pin_status;		
 	}
 	else if(temp==2)
 	{
@@ -597,7 +633,8 @@ bool Digital_input_Read(uint8_t temp,uint8_t message)
 		{				
 			LOG_PRINTF(LL_DEBUG,"PA8_status:%d\r\n",pin_status);
 			delay_ms(20);
-		}			
+		}
+		uplink_pin_status_pa8=pin_status;
 	}	
 	else if(temp==3)
 	{
@@ -606,7 +643,8 @@ bool Digital_input_Read(uint8_t temp,uint8_t message)
 		{				
 			LOG_PRINTF(LL_DEBUG,"PB15_status:%d\r\n",pin_status);
 			delay_ms(20);
-		}			
+		}	
+		uplink_pin_status_pb15=pin_status;		
 	}	
   return pin_status;	
 }
@@ -640,5 +678,37 @@ uint16_t middle_value(uint16_t value[])
   }
 	
 	return b;
+}
+
+void display_message(void)
+{
+	delay_ms(50);
+	float bat_temp=0.0;
+  bat_temp=battery_voltage_measurement()/1000.0;
+  if(bat_temp>3750)
+	{
+	  bat_temp=battery_voltage_measurement()/1000.0;
+	}			
+	LOG_PRINTF(LL_DEBUG,"\r\nBattery: %.3f V\r\n",bat_temp);
+  delay_ms(50);				
+	
+	float ds_temp=0.0;
+	ds_temp=DS18B20_GetTemp_SkipRom(1);
+	if((ds_temp>=-55)&&(ds_temp<=125))
+	{
+		LOG_PRINTF(LL_DEBUG,"Temperature (PC13): %.1f\r\n",ds_temp);
+	}
+	else
+	{
+		LOG_PRINTF(LL_DEBUG,"Temperature (PC13): NULL\r\n");		
+	}
+	delay_ms(50);	
+	
+	bool pin_status1=0,pin_status2=0,pin_status3=0;
+	pin_status1=gpio_read(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN);	
+	pin_status2=gpio_read(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN);
+	pin_status3=gpio_read(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN);	
+	LOG_PRINTF(LL_DEBUG,"PA8: %d ; PA4: %d , PB15: %d\r\n",pin_status1,pin_status2,pin_status3);
+	delay_ms(50);	
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

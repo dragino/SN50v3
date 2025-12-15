@@ -44,7 +44,7 @@ void GPIO_EXTI4_IoInit(uint8_t state)
 	gpio_set_iomux(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN, 0);	
 	gpio_init(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN, GPIO_MODE_INPUT_FLOATING);			
 	
-  if(state == 1)
+  if((state == 1)||(state == 4))
 	{
 		gpio_config_stop3_wakeup(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN,true,GPIO_LEVEL_HIGH);		
 		gpio_config_interrupt(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN, GPIO_INTR_RISING_FALLING_EDGE);
@@ -79,7 +79,7 @@ void GPIO_EXTI8_IoInit(uint8_t state)
 	gpio_set_iomux(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN, 0);	
 	gpio_init(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN, GPIO_MODE_INPUT_FLOATING);			
 	
-  if(state == 1)
+  if((state == 1)||(state == 4))
 	{
 		gpio_config_stop3_wakeup(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN,true,GPIO_LEVEL_HIGH);		
 		gpio_config_interrupt(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN, GPIO_INTR_RISING_FALLING_EDGE);
@@ -114,7 +114,7 @@ void GPIO_EXTI15_IoInit(uint8_t state)
 	gpio_set_iomux(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN, 0);	
 	gpio_init(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN, GPIO_MODE_INPUT_FLOATING);			
 	
-  if(state == 1)
+  if((state == 1)||(state == 4))
 	{
 		gpio_config_stop3_wakeup(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN,true,GPIO_LEVEL_HIGH);		
 		gpio_config_interrupt(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN, GPIO_INTR_RISING_FALLING_EDGE);

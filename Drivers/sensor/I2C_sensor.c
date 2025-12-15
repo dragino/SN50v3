@@ -26,7 +26,9 @@
 #include "I2C_sensor.h"
 #include "I2C_A.h"
 #include "bsp.h"
+#include "sht3x.h"
 
+static float gxht30_temp_record=10,gxht30_hum_record=40;
 extern bool bh1750flags;
 extern bool iic_noack;
 	
@@ -62,75 +64,66 @@ uint8_t SHT31_CheckSum_CRC8(uint8_t* Result,uint8_t num)
 	}
 }
 
-void SHT31_Read(sht31_t *sht31_data)
+void SHT31_Read(sht3x_data_t *sht3x_data)
 {
-	uint8_t rxdatas[6];
-	uint8_t data[2] = {0x2C, 0x06};	
-  bool read_status=1;	
-	uint8_t check_number=0;	
-
-	I2C_GPIO_MODE_Config();
+	etError   error;
+  uint8_t times = 0;
 	
 	do
 	{
-		read_status=1;
-		check_number++;
-	  if(I2C_Write_Len(0x44,0x01,2,data)==1)
-		{
-			read_status=0;
-			delay_ms(20);
-		}
-	}while(read_status==0&&check_number<4);
-	
-	if(read_status==1)
-	{
-		delay_ms(60);
-	  check_number=0;
-		do
-		{
-			read_status=1;
-			check_number++;
-			if(I2C_Read_Len(0x44,0x01,6,rxdatas)==1)
-			{
-				read_status=0;
-				delay_ms(20);
-			}
-			
-			if( SHT31_CheckSum_CRC8(rxdatas,0)==0 && SHT31_CheckSum_CRC8(rxdatas,3)==0)
-			{
-				read_status=0;
-				delay_ms(20);
-			}
-		}while(read_status==0&&check_number<4);
-	}
+		times++;
+	  error = SHT3X_GetTempAndHumiClkStretch(&sht3x_data->temp_sht, &sht3x_data->hum_sht, REPEATAB_HIGH, 50);
+	}while(times < 4 && error != NO_ERROR);
 
-	if(read_status==1)
-	{	
-		sht31_data->temp_sht=((rxdatas[0]<<8)+rxdatas[1])*175.0/(65536-1)-45.0;
-		sht31_data->hum_sht=((rxdatas[3]<<8)+rxdatas[4])*100.0/(65536-1);
-		if(sht31_data->hum_sht>100)	
+		if(error != NO_ERROR || sht3x_data->temp_sht-gxht30_temp_record>30 || sht3x_data->temp_sht-gxht30_temp_record<-30
+			|| sht3x_data->hum_sht<20 || sht3x_data->hum_sht>=100 || sht3x_data->hum_sht-gxht30_hum_record>20 || sht3x_data->hum_sht-gxht30_hum_record<-20)
 		{
-			sht31_data->hum_sht=100;
+			error = SHT3X_SoftReset();
+			times = 0;
+			delay_ms(50);		
+			do
+			{
+				times++;
+				error = SHT3X_GetTempAndHumiClkStretch(&sht3x_data->temp_sht, &sht3x_data->hum_sht, REPEATAB_HIGH, 50);
+			}while(times < 4 && error != NO_ERROR);
+	  }
+	
+  if(error == NO_ERROR)
+	{
+		if(sht3x_data->temp_sht>125)
+		{
+			sht3x_data->temp_sht=125;
+			sht3x_data->temp_sht=gxht30_temp_record;
 		}
-		else if(sht31_data->hum_sht<0)
-		{		
-		  sht31_data->hum_sht=0;
-		}	
-			
-		if(sht31_data->temp_sht>125)
+		else if(sht3x_data->temp_sht<-40)
 		{
-			sht31_data->temp_sht=125;
+			sht3x_data->temp_sht=-40;
+			sht3x_data->temp_sht=gxht30_temp_record;
 		}
-		else if(sht31_data->temp_sht<-40)
+		
+		if(sht3x_data->hum_sht>100)
 		{
-			sht31_data->temp_sht=-40;
-		}		
+			sht3x_data->hum_sht=100;
+			sht3x_data->hum_sht=gxht30_hum_record;
+		}
+		else if(sht3x_data->hum_sht<0)
+		{
+			sht3x_data->hum_sht=0;
+			sht3x_data->hum_sht=gxht30_hum_record;
+		}
+		else if(sht3x_data->hum_sht==100)
+		{
+			sht3x_data->hum_sht=gxht30_hum_record;
+		}
+		
+		gxht30_temp_record=sht3x_data->temp_sht;
+		gxht30_hum_record=sht3x_data->hum_sht;
 	}
 	else
 	{
-		sht31_data->temp_sht=3276.7;
-		sht31_data->hum_sht=6553.5;
-	}	
+		sht3x_data->temp_sht=3276.7;
+		sht3x_data->hum_sht=6553.5;
+	}
 }
 
 uint8_t check_sht31_connect(void)
@@ -380,10 +373,10 @@ void I2C_read_data(sensor_t *sensor_data,uint8_t flag_temp, uint8_t message)
 	}
 	else if(flag_temp==2)
 	{			       	
-		sht31_t temphum_data;		
-		SHT31_Read(&temphum_data);				
-		sensor_data->temp_sht=temphum_data.temp_sht;
-		sensor_data->hum_sht=temphum_data.hum_sht;	
+		sht3x_data_t get_sht3x_data;
+		SHT31_Read(&get_sht3x_data);				
+		sensor_data->temp_sht=get_sht3x_data.temp_sht;
+		sensor_data->hum_sht=get_sht3x_data.hum_sht;	
 		if(message==1)
 		{
 			LOG_PRINTF(LL_DEBUG,"SHT3x_temp:%.1f,SHT3x_hum:%.1f\r\n",sensor_data->temp_sht,sensor_data->hum_sht);

@@ -1,4 +1,4 @@
-/*
+ /*
  / _____)             _              | |
 ( (____  _____ ____ _| |_ _____  ____| |__
  \____ \| ___ |    (_   _) ___ |/ ___)  _ \
@@ -6,18 +6,18 @@
 (______/|_____)_|_|_| \__)_____)\____)_| |_|
     (C)2013 Semtech
 
-Description: contains all hardware driver
+Description: LoRaMac classA device implementation
 
 License: Revised BSD License, see LICENSE.TXT file include in the project
 
-Maintainer: Miguel Luis and Gregory Cristian
+Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 */
- /******************************************************************************
-  * @file    bsp.h
+/******************************************************************************
+  * @file    version.h
   * @author  MCD Application Team
   * @version V1.1.4
   * @date    08-January-2018
-  * @brief   contains all hardware driver
+  * @brief   defines the lora mac version
   ******************************************************************************
   * @attention
   *
@@ -57,102 +57,29 @@ Maintainer: Miguel Luis and Gregory Cristian
   *
   ******************************************************************************
   */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __BSP_H__
-#define __BSP_H__
+
+#ifndef __VERSION_H__
+#define __VERSION_H__
 
 #ifdef __cplusplus
  extern "C" {
 #endif
+   
 /* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-#include <stdint.h>
-#include <stdbool.h>
+
+#define AT_VERSION_STRING	"v1.3.4"
+#define AT_LoRaWan_VERSION_STRING	"DR-LWS-007" 
 	 
-typedef struct{
-  bool in1;
-	
-	bool exit_pa4;
-	
-	bool exit_pa8;
-	
-	bool exit_pb15;
-	
-	float temp1;
-
-	float temp2;
-
-	float temp3;
-	
-	float ADC_4; 
-
-	float ADC_5; 
-	
-	float ADC_8; 
-
-	float temp_sht;
-	
-	float hum_sht;
-
-	float temp_tmp117;
-	
-	uint16_t illuminance;	
-	
-  uint16_t distance_mm;
-	
-	uint16_t distance_signal_strengh;
-	
-	int32_t Weight;
-	
-	uint16_t bat_mv;
-	
-	uint32_t count_pa4;
-	
-	uint32_t count_pa8;
-	
-  uint16_t pwm_freq;
-	
-	uint16_t pwm_duty;
-	
-  /**more may be added*/
-} sensor_t;
-
-typedef struct{
-	
-	float temp_sht;
-	float hum_sht;
-
-} sht3x_data_t;
-/* Exported constants --------------------------------------------------------*/
+/* Exported types ------------------------------------------------------------*/
 /* External variables --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */ 
-/**
- * @brief  initialises the sensor
- *
- * @note
- * @retval None
- */
-void BLE_power_Init(void);
-void  BSP_sensor_Init( void  );
-void BSP_sensor_Read( sensor_t *sensor_data , uint8_t message ,uint8_t mod_temp);
-float DS18B20_Read(uint8_t temp,uint8_t message);
-uint16_t ADC_Read(uint8_t temp,uint8_t message);
-bool Digital_input_Read(uint8_t temp,uint8_t message);
-uint16_t battery_voltage_measurement(void);
-uint16_t middle_value(uint16_t value[]);
-void display_message(void);
-/**
- * @brief  sensor  read. 
- *
- * @note none
- * @retval sensor_data
- */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __BSP_H__ */
+#endif /*__VERSION_H__*/
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
