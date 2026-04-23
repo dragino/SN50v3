@@ -101,6 +101,14 @@ extern "C" {
 #define I2C_SDA_0  gpio_write(GPIO_PORT_I2C, I2C_SDA_PIN, 0)		/* SDA = 0 */
 #define I2C_SDA_READ()  gpio_read(GPIO_PORT_I2C, I2C_SDA_PIN)	
 
+#define SDA_LOW()  gpio_init(GPIO_PORT_I2C, I2C_SDA_PIN, GPIO_MODE_OUTPUT_PP_LOW) // set SDA to low
+#define SDA_OPEN() gpio_init(GPIO_PORT_I2C, I2C_SDA_PIN, GPIO_MODE_OUTPUT_OD_HIZ); // set SDA to open-drain
+#define SDA_READ   gpio_read(GPIO_PORT_I2C, I2C_SDA_PIN)     // read SDA
+
+#define SCL_LOW()  gpio_init(GPIO_PORT_I2C, I2C_SCL_PIN, GPIO_MODE_OUTPUT_PP_LOW) // set SCL to low
+#define SCL_OPEN() gpio_init(GPIO_PORT_I2C, I2C_SCL_PIN, GPIO_MODE_OUTPUT_OD_HIZ); // set SCL to open-drain
+#define SCL_READ   gpio_read(GPIO_PORT_I2C, I2C_SCL_PIN)     // read SCL	
+
 /* ---------------------------  WEIGHT HW definition -------------------------------*/
 #define WEIGHT_SCK_CLK_ENABLE()    rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOA, true)
 #define WEIGHT_SCK_PORT       		 GPIOA	 

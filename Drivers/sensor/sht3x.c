@@ -1,18 +1,3 @@
-//=============================================================================
-//    S E N S I R I O N   AG,  Laubisruetistr. 50, CH-8712 Staefa, Switzerland
-//=============================================================================
-// Project   :  SHT3x Sample Code (V1.1)
-// File      :  sht3x.c (V1.1)
-// Author    :  RFU
-// Date      :  6-Mai-2015
-// Controller:  STM32F100RB
-// IDE       :  µVision V5.12.0.0
-// Compiler  :  Armcc
-// Brief     :  Sensor Layer: Implementation of functions for sensor access.
-//=============================================================================
-
-//-- Includes -----------------------------------------------------------------
-
 #include "stdio.h"
 #include "I2C_A.h"
 #include "tremo_delay.h"

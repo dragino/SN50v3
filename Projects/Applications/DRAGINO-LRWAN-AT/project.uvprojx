@@ -467,6 +467,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\Drivers\sensor\TMP117_I2C.c</FilePath>
             </File>
+            <File>
+              <FileName>sht3x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\Drivers\sensor\sht3x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
