@@ -8,9 +8,11 @@ export PYTHON = python
 export HOST_ARCH := Cortex-M4F
 
 ifeq ($(shell uname), Linux)
-export EXECUTABLE_SUFFIX :=
+ export EXECUTABLE_SUFFIX :=
+else ifeq ($(shell uname), Darwin)
+ export EXECUTABLE_SUFFIX :=
 else
-export EXECUTABLE_SUFFIX := .exe
+ export EXECUTABLE_SUFFIX := .exe
 endif
 
 ifneq ($(OUT_DIR),$(wildcard $(OUT_DIR)))
