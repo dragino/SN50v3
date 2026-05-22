@@ -91,8 +91,8 @@ Maintainer: Miguel Luis and Gregory Cristian
  * 8KB
  * 
  */	 
-#define FLASH_LoRaMacDevNonce_START_ADDR   (0x0802E000)          
-#define FLASH_LoRaMacDevNonce_END_ADDR     (0x08030000)
+#define FLASH_LoRaMacDevNonce_START_ADDR   (0x0802F000)          
+#define FLASH_LoRaMacDevNonce_END_ADDR     (0x08031000)
 
 /*
  *3328

@@ -338,7 +338,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>-fshort-enums</MiscControls>
-              <Define>CORE_CM4,USE_HAL_DRIVER,HAS_FLOAT,STM32WLE5xx,REGION_EU868</Define>
+              <Define>CORE_CM4,USE_HAL_DRIVER,HAS_FLOAT,STM32WLE5xx,REGION_EU868,WLE5JCI6</Define>
               <Undefine></Undefine>
               <IncludePath>../Core/Inc;../LoRaWAN/App;../LoRaWAN/Target;../../../../../../Drivers/STM32WLxx_HAL_Driver/Inc;../../../../../../Drivers/STM32WLxx_HAL_Driver/Inc/Legacy;../../../../../../Utilities/trace/adv_trace;../../../../../../Utilities/misc;../../../../../../Utilities/sequencer;../../../../../../Utilities/timer;../../../../../../Utilities/lpm/tiny_lpm;../../../../../../Drivers/CMSIS/Device/ST/STM32WLxx/Include;../../../../../../Middlewares/Third_Party/LoRaWAN/Utilities;../../../../../../Middlewares/Third_Party/SubGHz_Phy;../../../../../../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver;../../../../../../Drivers/CMSIS/Include;../../../../../../Drivers/BSP/STM32WLxx_Nucleo;..\..\..\..\..\..\Drivers\BSP\Components\zb25vq32;..\..\..\..\..\..\Drivers\BSP\Components\ds18b20;..\..\..\..\..\..\Drivers\BSP\Components\sht3x;..\..\..\..\..\..\Drivers\BSP\Components\mcp3426;..\..\..\..\..\..\Middlewares\Core;..\..\..\..\..\..\Middlewares\Crypto;..\..\..\..\..\..\Middlewares\LoRaMac-node\region;..\..\..\..\..\..\Middlewares\LoRaMac-node;..\..\..\..\..\..\Drivers\BSP\Components\flash_eraseprogram;..\..\..\..\..\..\Drivers\BSP\Components\iwdg</IncludePath>
             </VariousControls>

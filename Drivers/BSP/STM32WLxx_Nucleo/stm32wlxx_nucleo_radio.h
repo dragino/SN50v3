@@ -95,6 +95,12 @@ typedef enum
 /** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_RFSWITCH RADIO LOW LEVEL RF SWITCH Constants
   * @{
   */
+#if defined( WLE5CCU6 )
+#define RF_SW_CTRL2_PIN                          GPIO_PIN_15
+#define RF_SW_CTRL2_GPIO_PORT                    GPIOA
+#define RF_SW_CTRL2_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOA_CLK_ENABLE()
+#define RF_SW_RX_GPIO_CLK_DISABLE()              __HAL_RCC_GPIOA_CLK_DISABLE()
+#elif defined( WLE5JCI6 )
 #define RF_SW_CTRL1_PIN                          GPIO_PIN_6
 #define RF_SW_CTRL1_GPIO_PORT                    GPIOC
 #define RF_SW_CTRL1_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOC_CLK_ENABLE()
@@ -104,6 +110,9 @@ typedef enum
 #define RF_SW_CTRL2_GPIO_PORT                    GPIOC
 #define RF_SW_CTRL2_GPIO_CLK_ENABLE()            __HAL_RCC_GPIOC_CLK_ENABLE()
 #define RF_SW_CTRL2_GPIO_CLK_DISABLE()           __HAL_RCC_GPIOC_CLK_DISABLE()
+#else
+  #error "Please define a MCU in the compiler options."
+#endif
 
 #define RF_TCXO_VCC_PIN                          GPIO_PIN_0
 #define RF_TCXO_VCC_GPIO_PORT                    GPIOB

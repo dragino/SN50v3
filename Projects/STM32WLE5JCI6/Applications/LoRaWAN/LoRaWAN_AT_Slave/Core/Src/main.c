@@ -1039,7 +1039,7 @@ static void Send_device_status(void)
 	sub_band = 0xff;
 	#endif
 	
-	version=LHT65N_FIRMWARE_VERSION;		
+	version=SN50v3_FIRMWARE_VERSION;		
 
 	uint16_t battery_mv;
   battery_mv=battery_voltage_measurement();
