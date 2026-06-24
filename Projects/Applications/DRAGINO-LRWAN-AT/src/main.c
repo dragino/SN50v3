@@ -55,6 +55,9 @@ uint32_t IWDG_Refresh_times_total_time=0;
 uint32_t txdone_detection_timeout=0;
 __IO uint8_t EnterLowPowerStopModeStatus=0,EnterLowPowerStopMode_error_times=0;
 
+uint8_t switch_status=0,switch_status2=0,switch_status3=0;
+static uint8_t normal_status=0,normal2_status=0,normal3_status=0;
+bool is_check_exit=0;
 bool join_network=0;
 bool sleep_status=0;//AT+SLEEP
 bool exti_flag=0,exti2_flag=0,exti3_flag=0;
@@ -106,6 +109,7 @@ uint8_t LinkADR_NbTrans_retransmission_nbtrials=0;
 uint8_t unconfirmed_uplink_change_to_confirmed_uplink_status=0;
 uint16_t unconfirmed_uplink_change_to_confirmed_uplink_timeout=0;
 
+extern uint16_t inmode_delay,inmode2_delay,inmode3_delay;
 extern uint8_t pwm_timer;
 extern uint8_t product_id;
 extern uint8_t fire_version;
@@ -191,6 +195,9 @@ void user_key_event(void);
 extern bool print_isdone(void);
 extern void printf_joinmessage(void);
 extern void weightreset(void);
+extern void LoraStartdelay1(void);
+extern void LoraStartdelay2(void);
+extern void LoraStartdelay3(void);
 
 /* Private variables ---------------------------------------------------------*/
 /* load Main call backs structure*/
@@ -339,6 +346,13 @@ int main(void)
 		StartIWDGRefresh();		
 	  LoraStartCheckBLE();
 	
+	  display_message();
+	  if(*((uint8_t *)(0x2000FE0B))==0xAA)
+		{
+			count1=(*((uint8_t *)(0x2000FE0C)))<<24|(*((uint8_t *)(0x2000FE0D)))<<16|(*((uint8_t *)(0x2000FE0E)))<<8|(*((uint8_t *)(0x2000FE0F)));
+			count2=(*((uint8_t *)(0x2000FE10)))<<24|(*((uint8_t *)(0x2000FE11)))<<16|(*((uint8_t *)(0x2000FE12)))<<8|(*((uint8_t *)(0x2000FE13)));
+		}
+		
 	  if(debug_flags==1)
 		{
 			LOG_PRINTF(LL_DEBUG,"dragino_6601_ota\r\n");
@@ -348,7 +362,10 @@ int main(void)
 		LORA_Init( &LoRaMainCallbacks, &LoRaParamInit);
 	
 	  TimerInit( &downlinkLedTimer, OndownlinkLedEvent );	
-	
+		LoraStartdelay1(); //PA8_exit_Delay
+		LoraStartdelay2(); //PA4_exit_Delay
+		LoraStartdelay3(); //PB15_exit_Delay
+		
 	  while( 1 )
     {  		
 			  if (Radio.IrqProcess != NULL) {
@@ -419,14 +436,14 @@ int main(void)
 					
 				if(joined_finish==1)
 				{		
-					if(((workmode!=6)&&(workmode!=9)&&(workmode!=3)&&(workmode!=8))&&(exti_flag==1))
+					if(((workmode!=6)&&(workmode!=9)&&(workmode!=3)&&(workmode!=8)&&(workmode!=12))&&(exti_flag==1))
 					{
 						if((( LoRaMacState & 0x00000001 ) != 0x00000001 )&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
 						{
 							uplink_data_status=1;
+							exit_temp=1;
+							exti_flag=0;
 						}
-						exit_temp=1;
-						exti_flag=0;
 					}		
 
 					if((workmode==7)&&(exti2_flag==1))
@@ -434,9 +451,9 @@ int main(void)
 						if((( LoRaMacState & 0x00000001 ) != 0x00000001 )&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
 						{
 							uplink_data_status=1;
+							exit2_temp=1;
+							exti2_flag=0;
 						}
-						exit2_temp=1;
-						exti2_flag=0;
 					}	
 
 					if(((workmode==3)||(workmode==7)||(workmode==8)||(workmode==9))&&(exti3_flag==1))
@@ -444,9 +461,9 @@ int main(void)
 						if((( LoRaMacState & 0x00000001 ) != 0x00000001 )&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
 						{
 							uplink_data_status=1;
+							exit3_temp=1;
+							exti3_flag=0;
 						}
-						exit3_temp=1;
-						exti3_flag=0;
 					}	
 					
 					if(LoRaMacState_error_times>=5)
@@ -586,7 +603,27 @@ int main(void)
 					{	
 						Send();
 						uplink_data_status=0;
-					}					
+					}
+      
+					if(is_check_exit==1)
+					{
+						if((( LoRaMacState & 0x00000001 ) != 0x00000001) &&(( LoRaMacState & 0x00000010 ) != 0x00000010))
+						{
+							normal_status=gpio_read(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN);
+							normal2_status=gpio_read(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN);
+							normal3_status=gpio_read(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN);
+							is_check_exit=0;
+							if(((switch_status!=normal_status)&&((workmode!=6)&&(workmode!=9)&&(workmode!=3)&&(workmode!=8)&&(workmode!=12))&&(inmode==1))||
+								((switch_status2!=normal2_status)&&(workmode==7)&&(inmode2==1))||
+								((switch_status3!=normal3_status)&&((workmode==3)||(workmode==7)||(workmode==8)||(workmode==9))&&(inmode3==1)))
+							{
+								switch_status=normal_status;
+								switch_status2=normal2_status;
+								switch_status3=normal3_status;
+								uplink_data_status=1;
+							}		
+						}
+					}						
 				}
 				
 				if(JoinReq_NbTrails_over==1)
@@ -934,6 +971,20 @@ static void Send( void )
 		AppData.Buff[i++] = 0x00;   
 		AppData.Buff[i++] = 0x00; 
 	}
+	else if(workmode==12)
+	{
+		AppData.Buff[i++] =(bsp_sensor_data_buff.bat_mv>>8);       
+		AppData.Buff[i++] = bsp_sensor_data_buff.bat_mv & 0xFF;		
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.temp_sht*10)>>8;      
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.temp_sht*10);
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.hum_sht*10)>>8;   
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.hum_sht*10);	
+		AppData.Buff[i++]= (bsp_sensor_data_buff.in1<<1) | 0x2C;		
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.count_pa8)>>24;      
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.count_pa8)>>16;
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.count_pa8)>>8;   
+		AppData.Buff[i++] =(int)(bsp_sensor_data_buff.count_pa8);	    		
+	}
 	
   AppData.BuffSize = i;
 	payloadlens=i;
@@ -944,6 +995,14 @@ static void Send( void )
 		exit2_temp=0;
 	if(exit3_temp==1)
 		exit3_temp=0;
+
+	if((inmode==1)||(inmode2==1)||(inmode3==1))
+	{
+		switch_status=gpio_read(GPIO_EXTI8_PORT, GPIO_EXTI8_PIN);
+		switch_status2=gpio_read(GPIO_EXTI15_PORT, GPIO_EXTI15_PIN);
+		switch_status3=gpio_read(GPIO_EXTI4_PORT, GPIO_EXTI4_PIN);
+		is_check_exit=1;
+	}
 	
   if(unconfirmed_uplink_change_to_confirmed_uplink_status==1)
   {
@@ -1206,24 +1265,36 @@ static void LORA_RxData( lora_AppData_t *AppData )
 			
    case 0x06:
    {
-			if( AppData->BuffSize == 4 )
+			if(( AppData->BuffSize == 4 )||( AppData->BuffSize == 6 ))
 			{
-			  if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x00)&&(AppData->Buff[3]<=0x03))   		  //---->AT+INTMOD1
+			  if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x00)&&(AppData->Buff[3]<=0x04))   		  //---->AT+INTMOD1
 				{
+					if( AppData->BuffSize == 6)
+					{
+						inmode_delay=AppData->Buff[4]<<8 | AppData->Buff[5];
+					}
 					inmode=AppData->Buff[3];
 					GPIO_EXTI8_IoInit(inmode);
 					downlink_config_store_in_flash=1;
 					rxpr_flags=1;		
 				}			
-			  else if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x01)&&(AppData->Buff[3]<=0x03))   		  //---->AT+INTMOD2
+			  else if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x01)&&(AppData->Buff[3]<=0x04))   		  //---->AT+INTMOD2
 				{
+					if( AppData->BuffSize == 6)
+					{
+						inmode2_delay=AppData->Buff[4]<<8 | AppData->Buff[5];
+					}
 					inmode2=AppData->Buff[3];
 					GPIO_EXTI4_IoInit(inmode);
 					downlink_config_store_in_flash=1;
 					rxpr_flags=1;		
 				}		
-			  if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x02)&&(AppData->Buff[3]<=0x03))   		  //---->AT+INTMOD3
+			  if((AppData->Buff[1]==0x00)&&(AppData->Buff[2]==0x02)&&(AppData->Buff[3]<=0x04))   		  //---->AT+INTMOD3
 				{
+					if( AppData->BuffSize == 6)
+					{
+						inmode3_delay=AppData->Buff[4]<<8 | AppData->Buff[5];
+					}
 					inmode3=AppData->Buff[3];
 					GPIO_EXTI15_IoInit(inmode);
 					downlink_config_store_in_flash=1;
@@ -1285,7 +1356,7 @@ static void LORA_RxData( lora_AppData_t *AppData )
 		{
 			if( AppData->BuffSize == 2 )         
 			{	
-				if((AppData->Buff[1]>=0x01)&&(AppData->Buff[1]<=0x0B))    //---->AT+MOD
+				if((AppData->Buff[1]>=0x01)&&(AppData->Buff[1]<=0x0C))    //---->AT+MOD
 				{
 					workmode=AppData->Buff[1];
 					downlink_config_store_in_flash=1;

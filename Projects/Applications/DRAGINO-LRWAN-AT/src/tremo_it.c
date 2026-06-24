@@ -5,6 +5,7 @@
 #include "tremo_uart.h"
 #include "tfsensor.h"
 #include "tremo_timer.h"
+#include "timer.h"
 
 uint16_t IC1[4],IC2[4];
 uint16_t IC1Value=0,IC2Value=0;
@@ -16,6 +17,21 @@ extern bool join_network;
 extern uint8_t inmode,inmode2,inmode3;
 extern uint32_t count1,count2;
 extern uint8_t workmode;
+extern uint16_t inmode_delay,inmode2_delay,inmode3_delay;
+extern bool uplink_pin_status_pb15,uplink_pin_status_pa4,uplink_pin_status_pa8;
+
+void LoraStartdelay1(void);
+void LoraStartdelay2(void);
+void LoraStartdelay3(void);
+static uint8_t status1;
+static uint8_t status2;
+static uint8_t status3;
+static void Onexdelay1TimerEvent( void );
+static void Onexdelay2TimerEvent( void );
+static void Onexdelay3TimerEvent( void );
+static TimerEvent_t exdelay1Timer;
+static TimerEvent_t exdelay2Timer;
+static TimerEvent_t exdelay3Timer;
 
 extern void RadioOnDioIrq(void);
 extern void RtcOnIrq(void);
@@ -203,18 +219,36 @@ void GPIO_IRQHandler(void)
 {	
   if (gpio_get_interrupt_status(GPIOA, GPIO_PIN_8) == SET) {
 			if((inmode!=0)&&(join_network==1))	
-			{		
-				if((workmode==6)||(workmode==9))
+			{	
+				if(inmode_delay==0)
+				{				
+				if((workmode==6)||(workmode==9)||(workmode==12))
 				{
 					if((inmode==2)||(inmode==3))
 					{
 						count1++;
-						exti_flag=1;
 					}
 				}
 				else
 				{
-					exti_flag=1;
+					if(inmode==4)
+					{
+						if(uplink_pin_status_pa8!=gpio_read(GPIOA, GPIO_PIN_8))
+						{
+							exti_flag=1;
+						}
+					}
+					else
+					{
+						exti_flag=1;
+					}
+				}
+				}
+				else
+				{
+						status1=gpio_read(GPIOA, GPIO_PIN_8);
+						TimerSetValue(&exdelay1Timer,inmode_delay); 
+						TimerStart(&exdelay1Timer);				
 				}
 			}				
 		  gpio_clear_interrupt(GPIOA, GPIO_PIN_8);	
@@ -223,14 +257,32 @@ void GPIO_IRQHandler(void)
   if (gpio_get_interrupt_status(GPIOA, GPIO_PIN_4) == SET) {	
 			if((inmode2!=0)&&(join_network==1))	
 			{		
+				if(inmode2_delay==0)
+				{
 				if(workmode==7)
-				{				
-					exti2_flag=1;
+				{			
+					if(inmode2==4)
+					{
+						if(uplink_pin_status_pa4!=gpio_read(GPIOA, GPIO_PIN_4))
+						{
+							exti2_flag=1;
+						}
+					}
+					else
+					{					
+						exti2_flag=1;
+					}
 				}
 				else if((workmode==9)&&((inmode2==2)||(inmode2==3)))
 				{
-				 exti2_flag=1;	
 				 count2++;					
+				}
+				}
+				else
+				{
+						status2=gpio_read(GPIOA, GPIO_PIN_4);
+						TimerSetValue(&exdelay2Timer,inmode2_delay); 
+						TimerStart(&exdelay2Timer);			
 				}
 			}				
 		  gpio_clear_interrupt(GPIOA, GPIO_PIN_4);	
@@ -238,10 +290,29 @@ void GPIO_IRQHandler(void)
 
   if (gpio_get_interrupt_status(GPIOB, GPIO_PIN_15) == SET) {	
 			if((inmode3!=0)&&(join_network==1))	
-			{		
+			{	
+			 if(inmode3_delay==0)
+			 {				
 			 if((workmode==3)||(workmode==7)||(workmode==8)||(workmode==9))
-			 {        				
-				exti3_flag=1;
+			 {
+				if(inmode3==4)
+				{
+					if(uplink_pin_status_pb15!=gpio_read(GPIOB, GPIO_PIN_15))
+					{
+						exti3_flag=1;
+					}
+				}
+				else
+				{
+					exti3_flag=1;
+				}
+			 }
+			 }
+			 else
+			 {
+						status3=gpio_read(GPIOB, GPIO_PIN_15);
+						TimerSetValue(&exdelay3Timer,inmode3_delay); 
+						TimerStart(&exdelay3Timer);			 
 			 }
 			}				
 		  gpio_clear_interrupt(GPIOB, GPIO_PIN_15);	
@@ -251,4 +322,97 @@ void GPIO_IRQHandler(void)
 			user_key_exti_flag=1;	
 		  gpio_clear_interrupt(GPIOC, GPIO_PIN_8);	
 	}		
+}
+
+
+static void Onexdelay1TimerEvent( void )
+{
+	TimerStop( &exdelay1Timer);
+	if(gpio_read(GPIOA, GPIO_PIN_8)==status1)
+	{
+		if((workmode==6)||(workmode==9)||(workmode==12))
+		{
+			if((inmode==2)||(inmode==3))
+			{
+				count1++;
+			}
+		}
+		else
+		{
+			if(inmode==4)
+			{
+				if(uplink_pin_status_pa8!=status1)
+				{
+					exti_flag=1;
+				}
+			}
+			else
+			{	
+				exti_flag=1;
+			}
+		}		  
+	}
+}
+
+void LoraStartdelay1(void)
+{
+   TimerInit( &exdelay1Timer, Onexdelay1TimerEvent );
+}
+
+static void Onexdelay2TimerEvent( void )
+{
+	TimerStop( &exdelay2Timer);
+	if(gpio_read(GPIOA, GPIO_PIN_4)==status2)
+	{
+		if(workmode==7)
+		{	
+			if(inmode2==4)
+			{
+				if(uplink_pin_status_pa4!=status2)
+				{
+					exti2_flag=1;
+				}
+			}
+			else
+			{			
+				exti2_flag=1;
+			}
+		}
+		else if((workmode==9)&&((inmode2==2)||(inmode2==3)))
+		{
+		  count2++;					
+		}	
+	}
+}
+
+void LoraStartdelay2(void)
+{
+   TimerInit( &exdelay2Timer, Onexdelay2TimerEvent );
+}
+
+static void Onexdelay3TimerEvent( void )
+{
+	TimerStop( &exdelay3Timer);
+	if(gpio_read(GPIOB, GPIO_PIN_15)==status3)
+	{
+	  if((workmode==3)||(workmode==7)||(workmode==8)||(workmode==9))
+	  {        				
+			if(inmode3==4)
+			{
+				if(uplink_pin_status_pb15!=status3)
+				{
+					exti3_flag=1;
+				}
+			}
+			else
+			{
+				exti3_flag=1;
+			}
+		}		
+	}
+}
+
+void LoraStartdelay3(void)
+{
+   TimerInit( &exdelay3Timer, Onexdelay3TimerEvent );
 }

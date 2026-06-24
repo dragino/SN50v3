@@ -1,6 +1,3 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
- */
 #include <stdlib.h>
 #include <string.h>
 #include "log.h"
@@ -99,7 +96,7 @@ extern uint32_t count1,count2;
 extern float GapValue;
 extern uint8_t pwm_timer;
 extern bool joined_finish;
-		
+extern uint16_t inmode_delay,inmode2_delay,inmode3_delay;		
 extern bool FDR_status;
 extern uint8_t RX2DR_setting_status;
 
@@ -2545,7 +2542,7 @@ static int at_mod_func(int opt, int argc, char *argv[])
         
             value = strtol((const char *)argv[0], NULL, 0);
 					
-					  if((value>=1)&&(value<=11))
+					  if((value>=1)&&(value<=12))
 						{
 							workmode=value;		
               LOG_PRINTF(LL_DEBUG,"Attention:Take effect after ATZ\r\n");							
@@ -2555,7 +2552,7 @@ static int at_mod_func(int opt, int argc, char *argv[])
             }
 						else
 						{
-							LOG_PRINTF(LL_DEBUG,"Mode of range is 1 to 11\r\n");		
+							LOG_PRINTF(LL_DEBUG,"Mode of range is 1 to 12\r\n");		
 							ret = LWAN_PARAM_ERROR;
 						}
             break;
@@ -2611,12 +2608,13 @@ static int at_5vtime_func(int opt, int argc, char *argv[])
 static int at_intmod1_func(int opt, int argc, char *argv[])
 {
     int ret = LWAN_PARAM_ERROR;
+	  uint16_t dlay=0;
     uint8_t value=0;
     
     switch(opt) {
          case QUERY_CMD: {
             ret = LWAN_SUCCESS;
-            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", inmode);
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d,%d\r\n", inmode,inmode_delay);
 
 					 break;
         }
@@ -2625,9 +2623,15 @@ static int at_intmod1_func(int opt, int argc, char *argv[])
             if(argc < 1) break;
             
             value = strtol((const char *)argv[0], NULL, 0);
-						if (value<=3)
+					  if(argc==2)
+						{
+							dlay= strtol((const char *)argv[1], NULL, 0);
+						}
+						
+						if (value<=4)
             {
 								inmode=value;
+							  inmode_delay=dlay;
 							  GPIO_EXTI8_IoInit(inmode);
                 ret = LWAN_SUCCESS;
 							  write_config_in_flash_status=1;
@@ -2654,12 +2658,13 @@ static int at_intmod1_func(int opt, int argc, char *argv[])
 static int at_intmod2_func(int opt, int argc, char *argv[])
 {
     int ret = LWAN_PARAM_ERROR;
+		uint16_t dlay=0;
     uint8_t value=0;
     
     switch(opt) {
          case QUERY_CMD: {
             ret = LWAN_SUCCESS;
-            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", inmode2);
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d,%d\r\n", inmode2,inmode2_delay);
 
 					 break;
         }
@@ -2668,9 +2673,15 @@ static int at_intmod2_func(int opt, int argc, char *argv[])
             if(argc < 1) break;
             
             value = strtol((const char *)argv[0], NULL, 0);
-						if (value<=3)
+					  if(argc==2)
+						{
+							dlay= strtol((const char *)argv[1], NULL, 0);
+						}
+						
+						if (value<=4)
             {
 								inmode2=value;
+							  inmode2_delay=dlay;
 							  GPIO_EXTI4_IoInit(inmode2);
                 ret = LWAN_SUCCESS;
 							  write_config_in_flash_status=1;
@@ -2697,12 +2708,13 @@ static int at_intmod2_func(int opt, int argc, char *argv[])
 static int at_intmod3_func(int opt, int argc, char *argv[])
 {
     int ret = LWAN_PARAM_ERROR;
+	  uint16_t dlay=0;
     uint8_t value=0;
     
     switch(opt) {
          case QUERY_CMD: {
             ret = LWAN_SUCCESS;
-            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", inmode3);
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d,%d\r\n", inmode3,inmode3_delay);
 
 					 break;
         }
@@ -2711,9 +2723,15 @@ static int at_intmod3_func(int opt, int argc, char *argv[])
             if(argc < 1) break;
             
             value = strtol((const char *)argv[0], NULL, 0);
-						if (value<=3)
+					  if(argc==2)
+						{
+							dlay= strtol((const char *)argv[1], NULL, 0);
+						}
+						
+						if (value<=4)
             {
 								inmode3=value;
+							  inmode3_delay=dlay;
 							  GPIO_EXTI15_IoInit(inmode3);
                 ret = LWAN_SUCCESS;
 							  write_config_in_flash_status=1;
@@ -3227,7 +3245,7 @@ static int at_getsensorvalue_func(int opt, int argc, char *argv[])
 						{
               if(status==0)
 							{		
-								if(( LoRaMacState & 0x00000001 ) == 0x00000001)
+								if(( LORA_JoinStatus () == LORA_SET)&&(( LoRaMacState & 0x00000001 ) == 0x00000001))
 								{
 									return LWAN_BUSY_ERROR;
 								}									

@@ -31,7 +31,7 @@
    
 /* Includes ------------------------------------------------------------------*/
 
-#define AT_VERSION_STRING	"v1.3"
+#define AT_VERSION_STRING	"v1.3.4"
 #define AT_LoRaWan_VERSION_STRING	"DR-LWS-007" 
 	 
 /* Exported types ------------------------------------------------------------*/
