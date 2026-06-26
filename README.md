@@ -9,3 +9,16 @@ See Step 1 ~ Step 7 of [LA66 Compile Instruction](http://wiki.dragino.com/xwiki/
 ## [via OTA: ](http://wiki.dragino.com/xwiki/bin/view/Main/Firmware%20OTA%20Update%20for%20Sensors/ )
 ## [via UART ](http://wiki.dragino.com/xwiki/bin/view/Main/UART%20Access%20for%20LoRa%20ST%20v4%20base%20model/ )
 
+
+
+## Linux/Debian build
+
+
+`apt install build-essential libstdc++-arm-none-eabi-dev gcc-arm-none-eabi`
+
+To compile:
+```
+export TREMO_SDK_PATH=$(pwd)
+cd Projects\Application\DRAGINO-LRWAN-AT\
+make
+```
