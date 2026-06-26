@@ -206,7 +206,7 @@ void BSP_sensor_Init(void)
 	NVIC_EnableIRQ(GPIO_IRQn);
 }
 
-void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
+void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t workmode)
 {
 	delay_ms(50);
 	iwdg_reload();
@@ -240,7 +240,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		delay_ms(20);
 	}
 
-	if (mod_temp == 1)
+	if (workmode == 1)
 	{
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -249,7 +249,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		sensor_data->ADC_4 = ADC_Read(1, message);
 		sensor_data->in1 = Digital_input_Read(3, message);
 	}
-	else if (mod_temp == 2)
+	else if (workmode == 2)
 	{
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -299,7 +299,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 			sensor_data->distance_signal_strengh = 65535;
 		}
 	}
-	else if (mod_temp == 3)
+	else if (workmode == 3)
 	{
 		sensor_data->exit_pb15 = Digital_input_Read(3, message);
 		I2C_read_data(sensor_data, flags, message);
@@ -310,7 +310,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		delay_ms(50);
 		sensor_data->ADC_8 = ADC_Read(3, message);
 	}
-	else if (mod_temp == 4)
+	else if (workmode == 4)
 	{
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -320,7 +320,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		sensor_data->ADC_4 = ADC_Read(1, message);
 		sensor_data->in1 = Digital_input_Read(3, message);
 	}
-	else if (mod_temp == 5)
+	else if (workmode == 5)
 	{
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -338,7 +338,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 			delay_ms(20);
 		}
 	}
-	else if (mod_temp == 6)
+	else if (workmode == 6)
 	{
 		sensor_data->temp1 = DS18B20_Read(1, message);
 		POWER_open_time(power_5v_time);
@@ -351,7 +351,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 			delay_ms(20);
 		}
 	}
-	else if (mod_temp == 7)
+	else if (workmode == 7)
 	{
 		sensor_data->exit_pa4 = Digital_input_Read(1, message);
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
@@ -360,7 +360,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		POWER_open_time(power_5v_time);
 		sensor_data->ADC_5 = ADC_Read(2, message);
 	}
-	else if (mod_temp == 8)
+	else if (workmode == 8)
 	{
 		sensor_data->exit_pb15 = Digital_input_Read(3, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -371,7 +371,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		delay_ms(50);
 		sensor_data->ADC_8 = ADC_Read(3, message);
 	}
-	else if (mod_temp == 9)
+	else if (workmode == 9)
 	{
 		sensor_data->exit_pb15 = Digital_input_Read(3, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -445,7 +445,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 			delay_ms(40);
 		}
 	}
-	else if (mod_temp == 11)
+	else if (workmode == 11)
 	{
 		sensor_data->exit_pa8 = Digital_input_Read(2, message);
 		sensor_data->temp1 = DS18B20_Read(1, message);
@@ -478,7 +478,7 @@ void BSP_sensor_Read(sensor_t *sensor_data, uint8_t message, uint8_t mod_temp)
 		sensor_data->ADC_4 = ADC_Read(1, message);
 		sensor_data->in1 = Digital_input_Read(3, message);
 	}
-	else if (mod_temp == 12)
+	else if (workmode == 12)
 	{
 		I2C_read_data(sensor_data, flags, message);
 		POWER_open_time(power_5v_time);
