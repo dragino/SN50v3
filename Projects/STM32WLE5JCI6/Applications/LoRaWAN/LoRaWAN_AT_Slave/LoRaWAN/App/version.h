@@ -69,7 +69,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 /* Includes ------------------------------------------------------------------*/
 
 #define AT_VERSION_STRING	"v1.0"
-#define	LHT65N_FIRMWARE_VERSION 0x0100
+#define	SN50v3_FIRMWARE_VERSION 0x0100
 #define AT_LoRaWan_VERSION_STRING	"DR-LWS-009" 
 	 
 /* Exported types ------------------------------------------------------------*/
